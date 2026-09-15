@@ -2,7 +2,7 @@
 
 A FastAPI and React project for extracting selected fields from text-based purchase-contract PDFs. The planned workflow lets users choose purchaser name, purchase price, contract date, and/or property address before submitting a document.
 
-**Current status: extraction service implemented.** Docker Compose and local startup work, and the backend can extract selected fields through its Python service. The HTTP API still provides only `GET /api/health`, and the frontend displays a setup page. Uploads and the product UI remain in WES-03 and WES-04.
+**Current status: extraction API implemented.** Docker Compose and local startup work. The backend provides `POST /api/extractions` for selected-field PDF extraction and `GET /api/health`. The frontend still displays a setup page; the upload and results interface remains in WES-04.
 
 Requirements are defined in the [candidate brief](purchase-contract-field-extraction-candidate-brief.md). Project working guidance is in [AGENTS.md](AGENTS.md).
 
@@ -74,7 +74,53 @@ npm run dev
 
 Vite proxies `/api` to `http://127.0.0.1:8000` locally and to `http://backend:8000` inside Compose via `API_PROXY_TARGET`. Browser requests use relative `/api/...` URLs in both cases. Stop each local server with `Ctrl+C`. On Windows, use `npm.cmd` if PowerShell blocks the `npm.ps1` wrapper.
 
-## Planned workflow
+## Extraction API
+
+Send `POST /api/extractions` as `multipart/form-data` with one `file` part and repeated `selected_fields` values. Select one to four distinct IDs from `purchaser_name`, `purchase_price`, `contract_date`, and `property_address`. Field order is preserved in the response.
+
+From the repository root on macOS/Linux:
+
+```bash
+curl http://localhost:8000/api/extractions \
+  -F "file=@sample-documents/missing-property-address.pdf" \
+  -F "selected_fields=property_address" \
+  -F "selected_fields=purchase_price"
+```
+
+Windows PowerShell:
+
+```powershell
+curl.exe http://localhost:8000/api/extractions -F "file=@sample-documents/missing-property-address.pdf" -F "selected_fields=property_address" -F "selected_fields=purchase_price"
+```
+
+Both requests return HTTP 200 with:
+
+```json
+{
+  "results": [
+    {"field_id": "property_address", "status": "missing", "value": null},
+    {"field_id": "purchase_price", "status": "found", "value": "UF 6.250"}
+  ]
+}
+```
+
+The same endpoint is available through the Vite proxy at `http://localhost:5173/api/extractions`. The future UI can use the relative URL `/api/extractions`. Each request supplies its own file and selection; the server keeps no request history or shared selection.
+
+| Status | Meaning |
+| --- | --- |
+| 200 | Processing succeeded, including when every selected field is missing. |
+| 422 | Missing, unknown, duplicate, or too many field IDs; a missing/empty file; or a PDF without extractable text. |
+| 500 | An unexpected reader or extraction failure; returns a generic message. |
+
+Errors have a `detail` property and no results array. FastAPI request-validation errors use a list of validation details; duplicate selections, empty uploads, and processing errors use a message string. For example, a textless PDF returns HTTP 422 with:
+
+```json
+{"detail": "The PDF contains no extractable text. Please upload a text-based PDF."}
+```
+
+The API assumes well-formed PDFs; custom malformed-file checks and upload size/page policies are outside scope. Unexpected failures return `{"detail":"Extraction failed. Please try again."}` without parser diagnostics or document contents. Upload resources are closed after processing, and the application does not persist the document or log its contents. FastAPI may use temporary spooled files while receiving uploads; these are closed with the request.
+
+## Planned user interface workflow
 
 1. Select one or more of the four available fields.
 2. Choose one PDF and start extraction.
@@ -86,7 +132,7 @@ A missing field means the document was successfully processed but the value coul
 ## Architecture and scope
 
 - `backend/app/main.py`: FastAPI application and health endpoint.
-- `backend/app/api/extraction.py`: placeholder for WES-03's upload endpoint.
+- `backend/app/api/extraction.py`: multipart upload endpoint, selection validation, and HTTP error mapping. The synchronous route runs blocking PDF work in FastAPI's thread pool.
 - `backend/app/extraction/`: validated result models, an in-memory PDF text reader, and the selected-field extraction service.
 - `frontend/src/`: React/TypeScript startup shell and test setup; API and component directories are ready for WES-04.
 - `sample-documents/`: the three supplied synthetic PDFs.
@@ -95,7 +141,7 @@ A missing field means the document was successfully processed but the value coul
 
 Extraction uses deterministic local text parsing scoped to the supplied Spanish contract style. It preserves names, dates, addresses, and monetary units as text and does not depend on filenames or hardcoded sample values. Runtime uploads and extracted applicant information must not enter logs or version control.
 
-OCR, external model APIs, authentication, databases, queues, and request history are outside the required scope. The upload/result workflow is not implemented yet.
+OCR, external model APIs, authentication, databases, queues, and request history are outside the required scope. The upload and results user interface is not implemented yet.
 
 ### Extraction service and supported wording
 
@@ -111,7 +157,7 @@ response = extract_fields(document, [FieldId.PURCHASE_PRICE, FieldId.CONTRACT_DA
 print(response.model_dump_json(indent=2))
 ```
 
-The service reads text once and runs only the selected matchers, returning results in selection order. Selection validation will happen in WES-03. Supported patterns are:
+The service reads text once and runs only the selected matchers, returning results in selection order. The API validates selections before calling the service. Supported patterns are:
 
 - Purchaser names in the introductory `comparecen … como comprador/compradora` clause, excluding `don/doña`.
 - Prices stated as `El precio total prometido para la compraventa es de …`, with an explicit UF, CLP, or USD prefix. Amounts retain their separators; no currency conversion or bare-`$` inference is performed.
@@ -149,7 +195,7 @@ docker compose exec frontend npm test -- --run
 docker compose exec frontend npm run build
 ```
 
-**12 extraction tests pass locally and in Docker**, covering the supplied values, selected-field execution and order, CLP/USD variations, pending dates, textless documents, and result-model invariants. API and frontend tests will accompany WES-03 and WES-04; Vitest currently reports no tests and returns a nonzero exit code. The maximum remains 25 backend tests and 10 frontend tests. Final verification will include a browser walkthrough of the supplied PDFs, a subset selection, and a textless PDF.
+**23 backend tests pass locally and in Docker:** 12 extraction tests and 11 API tests. They cover the supplied values, selected-field execution and order, CLP/USD variations, signing dates, textless documents, result-model invariants, multipart validation, error mapping, and independent requests. Frontend tests will accompany WES-04; Vitest currently reports no tests and returns a nonzero exit code. The maximum remains 25 backend tests and 10 frontend tests. Final verification will include a browser walkthrough of the supplied PDFs, a subset selection, and a textless PDF.
 
 Setup verification is recorded in [WES-01](planning/01-foundation.md#completion-evidence). Backend lint commands are `python -m ruff check .` and `python -m ruff format --check .` from `backend/` using its virtual environment, or their equivalents via `docker compose exec backend`.
 

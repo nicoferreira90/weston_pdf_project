@@ -4,6 +4,7 @@
 
 - OpenAI Codex helped read the candidate brief and synthetic PDFs, draft and simplify the four planning tickets, and scaffold the FastAPI/React project, Docker setup, and documentation.
 - For WES-02, Codex implemented the result models, PDF text reader, four contextual field matchers, and focused extraction tests. The parser supports UF, CLP, and USD in the documented contract wording.
+- For WES-03, Codex implemented the multipart upload endpoint, selection validation, processing-error mapping, and 11 API tests. It checked FastAPI's form/file documentation and FastAPI's request-cleanup source code before implementing the route.
 - Codex used shell commands to inspect files, install dependencies, generate lockfiles, and run setup checks. It consulted official FastAPI, Vite, and Docker documentation for startup, proxying, and container configuration, and official OpenAI documentation for `AGENTS.md` behavior.
 - Claude Code (Anthropic) reviews what Codex writes. For the setup commit, it checked the tickets and skeleton against the brief, re-ran the setup checks, and removed wording left over from the Codex conversation from the tickets and README.
 
@@ -13,7 +14,7 @@ The initial generated extraction ticket proposed testing all 15 nonempty field c
 
 ## Verification of generated work
 
-- Reviewed the skeleton against the brief, AGENTS.md, and the chosen architecture. Extraction is now implemented; API and UI feature files remain placeholders for later tickets.
+- Reviewed the implementation against the brief, AGENTS.md, and the chosen architecture. Extraction and its HTTP API are implemented; the frontend remains a setup shell pending WES-04.
 - Installed dependencies and generated a Python dependency lockfile and npm lockfile.
 - Ran the frontend TypeScript/production build successfully, and checked backend dependency consistency, Ruff lint, and Ruff formatting.
 - Started the local backend/frontend and verified HTTP 200 responses for the frontend, API documentation, direct health endpoint, and health endpoint through the frontend proxy.
@@ -23,5 +24,6 @@ The initial generated extraction ticket proposed testing all 15 nonempty field c
 - For extraction, tests initially failed against the placeholders, then passed after implementation. They assert actual fixture values, selected-only matcher execution, request order and independent results, changed synthetic values, signing-date semantics, textless-document errors, and invalid status/value combinations. Ruff lint and formatting checks also passed. No dependency changes were needed for WES-02.
 - Claude Code identified that the address matcher could include an adjacent sentence. Codex extended the existing synthetic cases to reproduce that bug and a renamed-heading failure, then changed the matcher to stop at the sentence boundary while preserving common address abbreviations. The total remains 12 tests.
 - The implementation assumes well-formed PDFs. Malformed-file handling is outside scope, while processing errors remain distinct from missing values.
+- For WES-03, tests initially failed against the placeholder, then all 23 backend tests passed locally and in Docker. Ruff lint and formatting checks passed. Real uploads were verified directly and through Vite for both local startup and Compose, including a textless-PDF error through Compose. Resource cleanup and absence of document logging were reviewed in the handler and FastAPI's request lifecycle.
 
 This record will be updated with implementation decisions and feature test results as work progresses.

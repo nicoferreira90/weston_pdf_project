@@ -19,7 +19,6 @@
   backend/
     app/
       main.py
-      config.py
       api/extraction.py
       extraction/models.py
       extraction/service.py
