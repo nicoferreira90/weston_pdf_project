@@ -1,0 +1,38 @@
+# Local tooling
+.agents/
+.codex/
+.impeccable/
+.cache/
+.idea/
+.vscode/
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Frontend and builds
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+*.log
+
+# Runtime documents; only the supplied synthetic fixtures belong in Git
+uploads/
+*.pdf
+!sample-documents/*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db

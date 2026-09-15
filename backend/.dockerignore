@@ -1,0 +1,9 @@
+*
+!requirements.lock
+!pyproject.toml
+!app/
+!app/**
+!tests/
+!tests/**
+**/__pycache__/
+**/*.pyc
