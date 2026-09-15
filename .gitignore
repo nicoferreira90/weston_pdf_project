@@ -32,6 +32,7 @@ build/
 uploads/
 *.pdf
 !sample-documents/*.pdf
+!sample-documents/non-canon-pdfs/*.pdf
 
 # OS files
 .DS_Store
