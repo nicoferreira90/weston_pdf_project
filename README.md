@@ -2,7 +2,7 @@
 
 A FastAPI and React project for extracting selected fields from text-based purchase-contract PDFs. The planned workflow lets users choose purchaser name, purchase price, contract date, and/or property address before submitting a document.
 
-**Current status: runnable project skeleton.** Docker Compose and local startup are implemented. The backend provides `GET /api/health`, and the frontend displays a setup page. Extraction, uploads, and the product UI will be implemented in WES-02 through WES-04.
+**Current status: extraction service implemented.** Docker Compose and local startup work, and the backend can extract selected fields through its Python service. The HTTP API still provides only `GET /api/health`, and the frontend displays a setup page. Uploads and the product UI remain in WES-03 and WES-04.
 
 Requirements are defined in the [candidate brief](purchase-contract-field-extraction-candidate-brief.md). Project working guidance is in [AGENTS.md](AGENTS.md).
 
@@ -87,15 +87,38 @@ A missing field means the document was successfully processed but the value coul
 
 - `backend/app/main.py`: FastAPI application and health endpoint.
 - `backend/app/api/extraction.py`: placeholder for WES-03's upload endpoint.
-- `backend/app/extraction/`: placeholders for WES-02's models, PDF reader, and extraction service.
+- `backend/app/extraction/`: validated result models, an in-memory PDF text reader, and the selected-field extraction service.
 - `frontend/src/`: React/TypeScript startup shell and test setup; API and component directories are ready for WES-04.
 - `sample-documents/`: the three supplied synthetic PDFs.
 - `docker-compose.yml`: backend/frontend development services with source reloading.
 - `planning/`: implementation tickets and proposed verification.
 
-Extraction will use deterministic local text parsing scoped to the supplied Spanish contract style. It will preserve names, dates, addresses, and monetary units as text and will not depend on filenames or hardcoded sample values. Runtime uploads and extracted applicant information must not enter logs or version control.
+Extraction uses deterministic local text parsing scoped to the supplied Spanish contract style. It preserves names, dates, addresses, and monetary units as text and does not depend on filenames or hardcoded sample values. Runtime uploads and extracted applicant information must not enter logs or version control.
 
-OCR, external model APIs, authentication, databases, queues, and request history are outside the required scope. Extraction and the upload/result workflow are not implemented yet. Parser limitations and any remaining gaps will be recorded as work progresses.
+OCR, external model APIs, authentication, databases, queues, and request history are outside the required scope. The upload/result workflow is not implemented yet.
+
+### Extraction service and supported wording
+
+From a Python session in `backend/`, using its virtual environment:
+
+```python
+from pathlib import Path
+from app.extraction.models import FieldId
+from app.extraction.service import extract_fields
+
+document = Path("../sample-documents/complete-purchase-contract.pdf").read_bytes()
+response = extract_fields(document, [FieldId.PURCHASE_PRICE, FieldId.CONTRACT_DATE])
+print(response.model_dump_json(indent=2))
+```
+
+The service reads text once and runs only the selected matchers, returning results in selection order. Selection validation will happen in WES-03. Supported patterns are:
+
+- Purchaser names in the introductory `comparecen … como comprador/compradora` clause, excluding `don/doña`.
+- Prices stated as `El precio total prometido para la compraventa es de …`, with an explicit UF, CLP, or USD prefix. Amounts retain their separators; no currency conversion or bare-`$` inference is performed.
+- Dates stated as `Firmado el …` or `Fecha de firma: …`, in Spanish day/month/year wording. Dates remain strings without calendar validation; pending signing dates are not inferred from other dates.
+- Addresses following the property's `La vendedora promete vender … ubicado/ubicada en …` wording and ending at the sentence boundary. Wrapped addresses and the abbreviations `Av.`, `Avda.`, `Depto.`, and `Dpto.` are preserved; subsequent sentences and headings are excluded.
+
+Matching ignores case and normalizes whitespace. It assumes the supplied style of prose; it is not a general contract parser. Different wording can return `missing` even when a value is present. A well-formed PDF without extractable text raises `DocumentProcessingError`; other reader errors propagate rather than becoming missing values. Malformed or non-PDF files are not specially handled.
 
 ## Checks and tests
 
@@ -126,7 +149,7 @@ docker compose exec frontend npm test -- --run
 docker compose exec frontend npm run build
 ```
 
-**No feature tests exist yet:** pytest and Vitest currently report no tests and return a nonzero exit code. Tests will accompany WES-02 through WES-04, within the maximum of 25 backend tests and 10 frontend tests. Final verification will include a browser walkthrough of the supplied PDFs, a subset selection, and a corrupt file.
+**12 extraction tests pass locally and in Docker**, covering the supplied values, selected-field execution and order, CLP/USD variations, pending dates, textless documents, and result-model invariants. API and frontend tests will accompany WES-03 and WES-04; Vitest currently reports no tests and returns a nonzero exit code. The maximum remains 25 backend tests and 10 frontend tests. Final verification will include a browser walkthrough of the supplied PDFs, a subset selection, and a textless PDF.
 
 Setup verification is recorded in [WES-01](planning/01-foundation.md#completion-evidence). Backend lint commands are `python -m ruff check .` and `python -m ruff format --check .` from `backend/` using its virtual environment, or their equivalents via `docker compose exec backend`.
 

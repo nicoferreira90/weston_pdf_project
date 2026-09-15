@@ -10,3 +10,4 @@
 10. Respect the assignment's 6–8 hour total working-time budget when making implementation decisions.
 11. Let's keep the total amount of tests at a maximum of 25 meaningful backend tests and 10 focused frontend tests.
 12. Do not create Git commits; the developer makes all commits. You may suggest commit messages.
+13. No need to build for the edge case of non-PDF formats or malformed PDFs. Let's assume a well-formed PDF.
