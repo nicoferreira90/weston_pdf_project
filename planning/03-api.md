@@ -73,4 +73,4 @@ Suggested commit: `feat(WES-03): add validated extraction upload API`.
 - Temporary local servers on ports 8001/5174 also accepted an extraction upload directly and through Vite, then were stopped. Alternate ports avoided conflicting with the running Compose stack.
 - Resource review: FastAPI's multipart request cleanup closes uploads after success, handler failures, and validation failures before route execution. The handler logs only the exception type on unexpected failures and returns fixed processing-error messages. The existing error tests verify that exception messages and tracebacks are not logged.
 - The synchronous route keeps blocking file reads and PDF parsing in FastAPI's thread pool. No new dependencies or backend settings were required; the existing Vite proxy handles frontend access.
-- The 2-hour figure is the planned budget; exact active working time was not separately tracked. The user interface remains in WES-04.
+- Approximate actual working time: 1 hour, estimated retrospectively by the developer. The 2-hour figure is the original planned budget. The user interface is delivered in WES-04.

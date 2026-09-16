@@ -104,4 +104,4 @@ Suggested commit: `feat(WES-02): extract selected fields from PDF text`.
 - `extract_fields(document, selected_fields)` accepts bytes and an already validated field selection. It has no filename or HTTP dependency. API and UI work remain in WES-03 and WES-04.
 - The existing synthetic cases reproduce adjacent-sentence capture and dependence on the next heading before the address fix. Both pass with sentence-bounded matching while preserving `Av.`; the total remains 12 tests.
 - Matching is limited to the documented Spanish contract clauses. Different wording may return missing; a missing result is not proof that the document lacks the field. Signing dates remain source strings without calendar validation.
-- The 2-hour figure is the planned budget; exact active working time was not separately tracked.
+- Approximate actual working time: 1 hour, estimated retrospectively by the developer. The 2-hour figure is the original planned budget.

@@ -69,7 +69,7 @@
 - [x] Docker images build and both services start, and the frontend can reach the backend through its API proxy.
 - [x] A reviewer does not need API credentials to run the baseline application.
 - [x] Only the supplied synthetic fixtures are included; generated environments and secrets are ignored.
-- [ ] Git history shows planning and setup before feature work. Later commits reference `WES-02`, `WES-03`, or `WES-04` as appropriate.
+- [x] Git history shows planning and setup before feature work. Later commits reference `WES-02`, `WES-03`, or `WES-04` as appropriate.
 - [x] `AI_USAGE.md` records tools, uses, one suggestion actually changed or rejected with a reason, and verification actually performed. Do not invent actions or results.
 
 ## Dependencies and order
@@ -100,4 +100,4 @@ Verified on 2026-09-15:
 - Pytest collection and `npm test -- --run` reported no tests, as expected for the skeleton. No feature test pass is claimed.
 - Read-only Git checks confirmed generated files, tooling directories, credentials, and runtime PDFs are ignored, while the three synthetic fixtures remain trackable. No commits existed at verification time.
 
-Extraction, the upload endpoint, and the product UI remain placeholders. Actual working time across planning and setup was not separately tracked; the 1-hour figure is the planned budget.
+At completion of this ticket, extraction, the upload endpoint, and the product UI were placeholders. Final verification confirmed that setup commit `d0cd0e2` precedes the feature commits. Approximate actual working time for planning and setup: 2 hours, estimated retrospectively by the developer; the 1-hour figure is the original budget.
