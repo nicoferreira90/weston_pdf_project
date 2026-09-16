@@ -195,6 +195,8 @@ Matching ignores case and normalizes whitespace. It assumes the supplied style o
 
 ## Checks and tests
 
+[GitHub Actions](.github/workflows/tests.yml) is configured to run on pushes and pull requests, with separate Ubuntu jobs for backend lint/formatting/tests and frontend tests/build. It uses Python 3.13, Node.js 22, and the existing dependency lockfiles. The check commands pass in Linux containers; the first hosted run is pending.
+
 Run backend tests from `backend/`:
 
 ```powershell
@@ -236,7 +238,8 @@ Setup verification is recorded in [WES-01](planning/01-foundation.md#completion-
 | [WES-02](planning/02-extraction.md) | Selected-field extraction and missing semantics | 2 hours | 1 hour |
 | [WES-03](planning/03-api.md) | Validated PDF upload API | 2 hours | 1 hour |
 | [WES-04](planning/04-ui.md) | Complete user flow and final verification | 3 hours | 2 hours |
+| [WES-05](planning/05-ci-and-tenant-design.md) (optional) | CI and tenant configuration design note | 1 hour | Not yet recorded |
 
-Total planned budget: **8 hours**. Actual working time is approximately **6 hours**, based on the developer's retrospective estimate across planning, implementation, review, and verification. These are estimates rather than precise time logs. The first substantive Git commit contains planning and setup before feature implementation, and later commits reference their ticket IDs.
+The original WES-01 through WES-04 plan budgeted **8 hours**; actual working time through WES-04 is approximately **6 hours**, based on the developer's retrospective estimate across planning, implementation, review, and verification. WES-05 allocates **1 hour** of the remaining allowance, for a projected total of **7 hours**. These are estimates rather than precise time logs. The first substantive Git commit contains planning and setup before feature implementation, and later commits reference their ticket IDs.
 
 See [AI_USAGE.md](AI_USAGE.md) for tools used, a changed/rejected suggestion, and verification performed.

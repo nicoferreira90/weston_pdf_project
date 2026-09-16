@@ -10,6 +10,7 @@
 - Claude Code (Anthropic) reviews what Codex writes. For the setup commit, it checked the tickets and skeleton against the brief, re-ran the setup checks, and removed wording left over from the Codex conversation from the tickets and README.
 - Claude Code reviewed WES-03 and WES-04, wrote the CSS restyle, and ran cross-platform verification. Its contribution included implementation as well as review.
 - Astra generated the synthetic A–N PDFs using a pypdf script that reused the canonical page size and font resources, and checked each fixture against the extraction service. The fixture index records both expected results and deliberate parser limitations.
+- For WES-05, Codex drafted the optional CI/tenant-design ticket and implemented the GitHub Actions workflow. It checked the official [checkout](https://github.com/actions/checkout), [setup-python](https://github.com/actions/setup-python), and [setup-node](https://github.com/actions/setup-node) documentation for action versions and inputs. The tenant design note remains pending.
 
 ## A suggestion changed or rejected
 
@@ -32,4 +33,6 @@ The initial generated extraction ticket proposed testing all 15 nonempty field c
 - Final WES-04 verification passed all 23 backend tests, all 10 frontend tests, and the frontend production build on Windows and in Linux containers. Backend Ruff lint and format checks passed. Headless Edge checks exercised the three canonical PDFs, keyboard subset submission, a textless-PDF error, request-error recovery controls, desktop/mobile layout, long-value wrapping, and accessible status/alert roles. A full screen-reader session and native macOS/Linux startup were not separately tested.
 - Windows reserved port 5173 during the final pass. Docker verification used a temporary host-port override to 6173; local verification used backend 8001 and frontend 6174. The same application code and API proxy were used. Temporary browser/local-server processes were stopped after the checks; verification helpers and captures remain outside version control.
 
-The developer estimates approximately 6 hours of actual working time: 2 hours for WES-01, 1 hour each for WES-02 and WES-03, and 2 hours for WES-04. These are retrospective estimates, separate from the original 8-hour plan.
+- For WES-05, the workflow's check commands passed in existing Linux containers: backend lint and formatting, 23 backend tests, 10 frontend tests, and the frontend production build. A hosted Actions run, including checkout/runtime setup/dependency installation, has not yet been verified; no CI badge or hosted success is claimed.
+
+The developer estimates approximately 6 hours of actual working time through WES-04: 2 hours for WES-01, 1 hour each for WES-02 and WES-03, and 2 hours for WES-04. These are retrospective estimates, separate from the original 8-hour plan. WES-05 has a 1-hour budget; its actual time has not yet been recorded.
