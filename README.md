@@ -1,5 +1,7 @@
 # Weston purchase-contract extraction
 
+[![tests](https://github.com/nicoferreira90/weston_pdf_project/actions/workflows/tests.yml/badge.svg)](https://github.com/nicoferreira90/weston_pdf_project/actions/workflows/tests.yml)
+
 A FastAPI and React application for extracting selected fields from text-based purchase-contract PDFs. Users choose purchaser name, purchase price, contract date, and/or property address before submitting a document.
 
 **Current status: complete extraction workflow implemented and verified.** The React UI supports field selection, PDF upload, found/missing results, and recovery from request errors. Both Docker Compose and local Python/Node startup are supported, without external accounts or API credentials.
@@ -193,9 +195,22 @@ Matching ignores case and normalizes whitespace. It assumes the supplied style o
 - There is no persistent history or asynchronous job processing. Each request completes synchronously, and the UI holds only its latest completed result until the next submission or page reload.
 - Verification covered Windows local startup and Linux containers. Native macOS/Linux startup and a full screen-reader session were not separately exercised; keyboard behavior and accessible status/alert roles were checked.
 
+### Tenant field configuration: proposed design
+
+This design is **not implemented**. The application currently has four fixed fields and no tenants, configuration API, or persistent results.
+
+- Keep a shared field catalog with stable IDs such as `purchase_price`. Changing a display label does not change its ID; changing a field's meaning requires a new ID.
+- Identify each immutable bank configuration by `(bank_id, configuration_version)`. It lists available field IDs and labels and references the supported result-schema and parser versions. Changes create a new configuration; old versions remain available for interpreting saved results.
+- Each bank points to one active configuration. Validate its field IDs and schema/parser compatibility before activation. Banks can activate versions independently; rollback points the bank back to a previous compatible version without editing either version.
+- The API derives the bank from authenticated context and returns its active configuration and version to the UI. The UI submits that version with the PDF and selected field IDs; the API checks that the fields belong to that bank's configuration.
+- At request acceptance, compare the submitted version with the active version. Reject a stale version with HTTP 409 before extraction and ask the UI to refresh and have the user review the selection. Pin the accepted configuration for the whole extraction, even if another version is activated during processing.
+- Persist the bank ID, configuration version, selected field IDs, parser/schema versions, and results together. Render historical results using their retained configuration's labels and definitions, never the bank's current configuration.
+
+For example, if bank A's version 2 removes `property_address` or renames its label, results created under version 1 retain their original fields and labels. A form still open on version 1 receives a conflict when submitted after version 2 is activated; it is never silently interpreted using version 2. Bank B's configuration is unaffected.
+
 ## Checks and tests
 
-[GitHub Actions](.github/workflows/tests.yml) is configured to run on pushes and pull requests, with separate Ubuntu jobs for backend lint/formatting/tests and frontend tests/build. It uses Python 3.13, Node.js 22, and the existing dependency lockfiles. The check commands pass in Linux containers; the first hosted run is pending.
+[GitHub Actions](.github/workflows/tests.yml) runs on pushes and pull requests, with separate Ubuntu jobs for backend lint/formatting/tests and frontend tests/build. It uses Python 3.13, Node.js 22, and the existing dependency lockfiles. The developer confirmed a successful hosted run; the badge links to the workflow's current status and run history.
 
 Run backend tests from `backend/`:
 
@@ -238,8 +253,8 @@ Setup verification is recorded in [WES-01](planning/01-foundation.md#completion-
 | [WES-02](planning/02-extraction.md) | Selected-field extraction and missing semantics | 2 hours | 1 hour |
 | [WES-03](planning/03-api.md) | Validated PDF upload API | 2 hours | 1 hour |
 | [WES-04](planning/04-ui.md) | Complete user flow and final verification | 3 hours | 2 hours |
-| [WES-05](planning/05-ci-and-tenant-design.md) (optional) | CI and tenant configuration design note | 1 hour | Not yet recorded |
+| [WES-05](planning/05-ci-and-tenant-design.md) (optional) | CI and tenant configuration design note | 1 hour | 1 hour |
 
-The original WES-01 through WES-04 plan budgeted **8 hours**; actual working time through WES-04 is approximately **6 hours**, based on the developer's retrospective estimate across planning, implementation, review, and verification. WES-05 allocates **1 hour** of the remaining allowance, for a projected total of **7 hours**. These are estimates rather than precise time logs. The first substantive Git commit contains planning and setup before feature implementation, and later commits reference their ticket IDs.
+The original WES-01 through WES-04 plan budgeted **8 hours**; actual working time through WES-04 was approximately **6 hours**. WES-05 used **1 hour** of the remaining allowance, bringing actual working time to approximately **7 hours**, including planning, implementation, review, and verification. These are the developer's retrospective estimates rather than precise time logs. The first substantive Git commit contains planning and setup before feature implementation, and later commits reference their ticket IDs.
 
 See [AI_USAGE.md](AI_USAGE.md) for tools used, a changed/rejected suggestion, and verification performed.
